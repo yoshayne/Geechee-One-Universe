@@ -46,9 +46,14 @@ export default function AdminFilms() {
         <h1 className="font-serif font-bold text-3xl uppercase text-white">
           Our <span className="gold-text">Films</span>
         </h1>
-        <Link to="/admin/films/new" className="btn">
-          Add Film
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/admin/films/import" className="btn-outline">
+            Import all from TMDB
+          </Link>
+          <Link to="/admin/films/new" className="btn">
+            Add Film
+          </Link>
+        </div>
       </div>
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
       {!films ? (

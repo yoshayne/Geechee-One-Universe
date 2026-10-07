@@ -40,10 +40,10 @@ async function copyImage(url: string, warnings: string[], label: string): Promis
   }
 }
 
-async function tmdb(path: string, params: Record<string, string> = {}) {
+export async function tmdb(path: string, params: Record<string, string> = {}) {
   const key = process.env.TMDB_API_KEY;
-  if (!key) throw new ImportError("TMDB_API_KEY is not set on the server, so IMDb import is not available yet.");
-  const url = new URL(`https://api.themoviedb.org/3${path}`);
+  if (!key) throw new ImportError("TMDB_API_KEY is not set on the server, so TMDB import is not available yet.");
+  const url = new URL(`${process.env.TMDB_API_BASE || "https://api.themoviedb.org/3"}${path}`);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   const headers: Record<string, string> = { Accept: "application/json" };
   if (key.startsWith("eyJ")) headers.Authorization = `Bearer ${key}`;
@@ -54,11 +54,16 @@ async function tmdb(path: string, params: Record<string, string> = {}) {
 }
 
 async function importFromImdb(imdbId: string): Promise<ImportResult> {
-  const warnings: string[] = [];
   const found = await tmdb(`/find/${imdbId}`, { external_source: "imdb_id" });
   const match = found.movie_results?.[0];
   if (!match) throw new ImportError(NOT_IN_TMDB);
-  const d = await tmdb(`/movie/${match.id}`, { append_to_response: "videos,credits" });
+  return importFromTmdbId(match.id, imdbId);
+}
+
+// Loads one film's full details from TMDB and keeps our own copies of its images.
+export async function importFromTmdbId(tmdbId: number, imdbIdKnown?: string): Promise<ImportResult> {
+  const warnings: string[] = [];
+  const d = await tmdb(`/movie/${tmdbId}`, { append_to_response: "videos,credits" });
 
   const director = d.credits?.crew?.find((c: any) => c.job === "Director")?.name;
   const trailer = d.videos?.results?.find((v: any) => v.site === "YouTube" && v.type === "Trailer");
@@ -70,7 +75,7 @@ async function importFromImdb(imdbId: string): Promise<ImportResult> {
     director,
     synopsis: d.overview || undefined,
     trailer_url: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
-    imdb_id: imdbId,
+    imdb_id: imdbIdKnown || d.imdb_id || undefined,
     links: [],
     warnings,
   };
