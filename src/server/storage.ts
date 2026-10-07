@@ -3,8 +3,16 @@ import { randomUUID } from "crypto";
 
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
+// Railway's bucket variables are sometimes named BUCKET_URL instead of BUCKET_ENDPOINT, so accept both.
+// A bare host name (no https://) gets https:// added.
+function bucketEndpoint(): string | undefined {
+  const raw = (process.env.BUCKET_ENDPOINT || process.env.BUCKET_URL || "").trim();
+  if (!raw) return undefined;
+  return /^https?:\/\//.test(raw) ? raw : `https://${raw}`;
+}
+
 export const storageConfigured = Boolean(
-  process.env.BUCKET_ENDPOINT &&
+  bucketEndpoint() &&
     process.env.BUCKET_NAME &&
     process.env.BUCKET_ACCESS_KEY_ID &&
     process.env.BUCKET_SECRET_ACCESS_KEY
@@ -15,7 +23,7 @@ function s3() {
   if (!client) {
     client = new S3Client({
       region: process.env.BUCKET_REGION || "auto",
-      endpoint: process.env.BUCKET_ENDPOINT,
+      endpoint: bucketEndpoint(),
       forcePathStyle: process.env.BUCKET_FORCE_PATH_STYLE === "true",
       credentials: {
         accessKeyId: process.env.BUCKET_ACCESS_KEY_ID!,
