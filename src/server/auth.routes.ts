@@ -12,6 +12,7 @@ import {
   verifySession,
 } from "./auth.helpers";
 import { requireAdmin } from "./auth.middleware";
+import { clientIp } from "./admin.util";
 
 export const auth = new Hono();
 
@@ -28,11 +29,6 @@ const cookieOpts = {
   path: "/",
   maxAge: SESSION_SECONDS,
 };
-
-function clientIp(c: any) {
-  const fwd = c.req.header("x-forwarded-for");
-  return (fwd ? fwd.split(",")[0].trim() : "unknown") || "unknown";
-}
 
 auth.post("/login", async (c) => {
   const ip = clientIp(c);

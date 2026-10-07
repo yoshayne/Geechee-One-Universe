@@ -36,3 +36,41 @@ body {
     @apply inline-block px-3 py-1 text-xs uppercase tracking-widest text-red-400 border border-red-400/60 cursor-pointer;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Metallic white heading text and vertical gold, like the film titles in the mockup */
+.metal-text {
+  background: linear-gradient(180deg, #ffffff 0%, #dcdcdc 45%, #9a9a9a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.gold-text-v {
+  background: linear-gradient(180deg, #f9dc8a 0%, #d4a537 55%, #8f6414 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(212, 165, 55, 0.9), rgba(212, 165, 55, 0.15));
+}
+
+@layer components {
+  .nav-link {
+    @apply text-xs font-medium uppercase tracking-[0.18em] text-white hover:text-gold transition-colors;
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-[0.15em] text-ink cursor-pointer;
+    background: linear-gradient(90deg, #f5d06f, #d4a537, #a87a1c);
+  }
+  .btn-line {
+    @apply inline-flex items-center justify-center px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gold border border-gold/80 hover:bg-gold/10 transition-colors cursor-pointer;
+  }
+  .section-heading {
+    @apply font-serif font-bold uppercase text-white text-3xl md:text-4xl tracking-wide;
+  }
+}

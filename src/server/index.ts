@@ -13,6 +13,7 @@ import { subscribers } from "./admin.subscribers";
 import { upload } from "./admin.upload";
 import { tmdbRoutes } from "./admin.tmdb";
 import { people } from "./admin.people";
+import { publicApi } from "./public.routes";
 import { readObject, storageConfigured } from "./storage";
 
 const app = new Hono();
@@ -37,6 +38,7 @@ app.get("/api/health", async (c) => {
 });
 
 app.route("/api/auth", auth);
+app.route("/api", publicApi);
 
 // Everything under /api/admin requires login.
 const admin = new Hono();
