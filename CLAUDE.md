@@ -1,4 +1,4 @@
-# CLAUDE.md — Geechee One Films Website
+# CLAUDE.md — Geechee One Universe Website
 
 Build brief for Claude Code. Read this whole file before writing any code. Work one milestone at a time, stop at the end of each milestone, and wait for the owner to confirm before starting the next.
 
@@ -8,7 +8,7 @@ The owner is not an experienced coder. Always provide complete files, never part
 
 ## 1. What this site is
 
-A public catalog website for an independent film company, Geechee One Films.
+A public catalog website for the Geechee One Universe brand, home of the independent film company Geechee One Films. The site and brand name is **Geechee One Universe**. The mockup still says "Geechee One Films" in the logo and footer; use "Geechee One Universe" there instead. The line "A Geechee One Films Production" on each film stays as is, because it is the production credit.
 
 - Visitors browse the company's films.
 - Clicking a film card opens a popup showing the film's details and links to watch it on outside platforms (Tubi, Prime Video, Apple TV, Vudu/Fandango, and others).
