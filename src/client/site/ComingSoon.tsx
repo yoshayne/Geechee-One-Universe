@@ -17,7 +17,7 @@ export default function ComingSoon({ films, onOpen }: { films: PublicFilm[]; onO
           return (
             <li key={f.id}>
               <button onClick={() => onOpen(f)} aria-label={`${f.title}, coming soon`} className="group relative block aspect-[4/3] w-full overflow-hidden border border-gold/30 hover:border-gold transition-colors bg-panel text-center">
-                {img && <img src={img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />}
+                {img && <img src={img} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/50" />
                 <span className="absolute inset-x-0 top-5 text-[10px] uppercase tracking-[0.3em] text-white/70">A Geechee One Films Production</span>
                 <span className="absolute inset-x-4 bottom-8 font-serif text-2xl md:text-3xl font-bold uppercase tracking-wide text-white">{f.title}</span>

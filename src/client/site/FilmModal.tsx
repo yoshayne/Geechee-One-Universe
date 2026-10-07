@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from "react";
 import { CloseIcon, PlayIcon } from "./icons";
 import { PlatformMark, TitleText } from "./shared";
 import { PublicFilm } from "./types";
@@ -22,7 +22,7 @@ function Trailer({ film }: { film: PublicFilm }) {
         />
       ) : (
         <button onClick={() => setPlaying(true)} aria-label={`Play ${film.title} trailer`} className="group absolute inset-0 w-full h-full">
-          <img src={thumb} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" />
+          <img src={thumb} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" />
           <span className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white text-white bg-black/30">
             <PlayIcon className="h-7 w-7 ml-1" />
           </span>
@@ -33,12 +33,19 @@ function Trailer({ film }: { film: PublicFilm }) {
   );
 }
 
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
+
 export default function FilmModal({ film, onClose }: { film: PublicFilm; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
+    // Remember what had focus (the button that opened the popup) so we can give it back on close.
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     const previous = document.body.style.overflow;
@@ -47,8 +54,25 @@ export default function FilmModal({ film, onClose }: { film: PublicFilm; onClose
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previous;
+      opener?.focus();
     };
-  }, [onClose]);
+  }, []);
+
+  // Keep Tab and Shift+Tab inside the popup.
+  function trapTab(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (e.key !== "Tab" || !dialogRef.current) return;
+    const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 
   const meta = [film.year, film.runtime_minutes ? `${film.runtime_minutes} MIN` : null, film.genres.length ? film.genres.join(" / ") : null, film.content_rating]
     .filter(Boolean)
@@ -57,6 +81,8 @@ export default function FilmModal({ film, onClose }: { film: PublicFilm; onClose
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center md:p-6 bg-black/80 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div
+        ref={dialogRef}
+        onKeyDown={trapTab}
         role="dialog"
         aria-modal="true"
         aria-labelledby="film-modal-title"

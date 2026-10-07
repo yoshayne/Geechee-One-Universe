@@ -12,7 +12,7 @@ function TeamCard({ person }: { person: PublicPerson }) {
     <li className="flex flex-col border border-gold/25 bg-panel">
       <div className="aspect-square w-full bg-ink overflow-hidden">
         {person.photo_url ? (
-          <img src={person.photo_url} alt={person.name} loading="lazy" className="h-full w-full object-cover" />
+          <img src={person.photo_url} alt={person.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           <span className="flex h-full items-center justify-center font-serif text-5xl text-gold/60">{person.name.charAt(0)}</span>
         )}
@@ -43,12 +43,12 @@ export default function About({ settings, people }: { settings: SiteSettings; pe
       <div className={`grid ${image ? "md:grid-cols-2" : ""}`}>
         {image && (
           <div className="relative min-h-[320px] md:min-h-[460px]">
-            <img src={image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-ink hidden md:block" />
           </div>
         )}
         <div className={`flex flex-col justify-center gap-6 px-5 md:px-14 py-12 ${image ? "" : "max-w-3xl mx-auto"}`}>
-          <h2 className="font-serif font-bold uppercase leading-tight tracking-wide text-4xl md:text-5xl">
+          <h2 className="font-serif font-bold uppercase leading-tight tracking-wide text-4xl md:text-4xl lg:text-5xl">
             <span className="block text-white">About</span>
             <span className="block text-gold">Geechee One Films</span>
           </h2>

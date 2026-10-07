@@ -23,7 +23,7 @@ export default function Footer({ settings }: { settings: SiteSettings }) {
           <p className="text-xs text-white/80">{copyright}</p>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-5 md:px-8 pb-8 text-[11px] leading-relaxed text-[#777]">
+      <div className="max-w-7xl mx-auto px-5 md:px-8 pb-8 text-[11px] leading-relaxed text-[#9a9a9a]">
         <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
         <p>Streaming availability data provided by JustWatch.</p>
       </div>

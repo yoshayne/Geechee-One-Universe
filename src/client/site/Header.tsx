@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MenuIcon, CloseIcon } from "./icons";
 import { Logo, SocialIcons } from "./shared";
 import { SiteSettings } from "./types";
@@ -13,6 +13,19 @@ type Props = { settings: SiteSettings; onWatchNow?: () => void };
 
 export default function Header({ settings, onWatchNow }: Props) {
   const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        menuButton.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <header className="sticky top-0 z-40 bg-ink/95 backdrop-blur border-b border-gold/20">
@@ -20,20 +33,21 @@ export default function Header({ settings, onWatchNow }: Props) {
         <a href="#top" aria-label="Geechee One Universe home" className="shrink-0">
           <Logo settings={settings} />
         </a>
-        <nav className="hidden md:flex items-center gap-8 ml-auto" aria-label="Main">
+        <nav className="hidden md:flex items-center gap-6 lg:gap-8 ml-auto" aria-label="Main">
           {NAV.map((n) => (
             <a key={n.href} href={n.href} className="nav-link">
               {n.label}
             </a>
           ))}
         </nav>
-        <SocialIcons settings={settings} only={["facebook_url", "instagram_url", "youtube_url"]} className="hidden md:flex" />
+        <SocialIcons settings={settings} only={["facebook_url", "instagram_url", "youtube_url"]} className="hidden lg:flex" />
         {onWatchNow && (
-          <button onClick={onWatchNow} className="btn-line hidden md:inline-flex">
+          <button onClick={onWatchNow} className="btn-line hidden md:inline-flex whitespace-nowrap">
             Watch Now
           </button>
         )}
         <button
+          ref={menuButton}
           className="md:hidden ml-auto text-white"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}

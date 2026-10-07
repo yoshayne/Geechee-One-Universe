@@ -30,7 +30,7 @@ export function Logo({ settings, className = "" }: { settings: SiteSettings; cla
     return <img src={settings.logo_url} alt="Geechee One Universe" className={`h-12 md:h-14 w-auto object-contain ${className}`} />;
   }
   return (
-    <span className={`inline-flex flex-col leading-none ${className}`}>
+    <span className={`inline-flex flex-col leading-none whitespace-nowrap ${className}`}>
       <span className="font-serif italic font-bold text-2xl md:text-3xl gold-text">Geechee One</span>
       <span className="text-[10px] tracking-[0.5em] text-gold mt-1 pl-1">UNIVERSE</span>
     </span>
@@ -39,7 +39,7 @@ export function Logo({ settings, className = "" }: { settings: SiteSettings; cla
 
 // Platform logo, or the platform's name as text if no logo has been uploaded.
 export function PlatformMark({ name, logoUrl, className = "h-8" }: { name: string; logoUrl: string | null; className?: string }) {
-  if (logoUrl) return <img src={logoUrl} alt={name} loading="lazy" className={`${className} w-auto max-w-[9rem] object-contain`} />;
+  if (logoUrl) return <img src={logoUrl} alt={name} loading="lazy" decoding="async" className={`${className} w-auto max-w-[9rem] object-contain`} />;
   return <span className="font-serif font-bold text-lg text-white">{name}</span>;
 }
 

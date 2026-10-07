@@ -6,7 +6,7 @@ export default function Hero({ film, onWatch }: { film: PublicFilm; onWatch: (f:
   return (
     <section id="top" className="relative overflow-hidden border-b border-gold/30 min-h-[460px] md:min-h-[580px] flex items-center">
       {film.hero_url ? (
-        <img src={film.hero_url} alt="" className="absolute inset-0 h-full w-full object-cover object-[70%_center]" />
+        <img src={film.hero_url} alt="" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[70%_center]" />
       ) : (
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(212,165,55,0.25),transparent_60%)]" />
       )}
