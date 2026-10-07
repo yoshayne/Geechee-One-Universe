@@ -62,6 +62,37 @@ async function importFromImdb(imdbId: string): Promise<ImportResult> {
 }
 
 const IMG = "https://image.tmdb.org/t/p";
+
+// Maps TMDB / JustWatch provider names to the platforms in our own list.
+const PROVIDER_MAP: [RegExp, string][] = [
+  [/^tubi/i, "Tubi"],
+  [/prime video|^amazon video/i, "Prime Video"],
+  [/^apple (tv|itunes)/i, "Apple TV"],
+  [/^(vudu|fandango at home)/i, "Vudu/Fandango"],
+];
+
+// Reads TMDB's "where to watch" data. TMDB only gives one JustWatch page for the film,
+// so each matching platform gets that page as its link until the admin swaps in a direct link.
+async function watchLinks(d: any, warnings: string[]): Promise<{ platform_id: number; url: string }[]> {
+  const region = (process.env.TMDB_WATCH_REGION || "US").toUpperCase();
+  const info = d["watch/providers"]?.results?.[region];
+  if (!info?.link || !/^https?:\/\//.test(info.link)) return [];
+  const names = new Set<string>();
+  for (const kind of ["flatrate", "free", "ads", "rent", "buy"]) {
+    for (const p of info[kind] || []) if (p.provider_name) names.add(String(p.provider_name));
+  }
+  const ours = new Set<string>();
+  const others: string[] = [];
+  for (const n of names) {
+    const hit = PROVIDER_MAP.find(([re]) => re.test(n));
+    if (hit) ours.add(hit[1]);
+    else others.push(n);
+  }
+  if (others.length) warnings.push(`${d.title}: TMDB also lists it on ${others.join(", ")} (not in your platform list).`);
+  if (!ours.size) return [];
+  const { rows } = await pool.query("SELECT id FROM platforms WHERE name = ANY($1)", [[...ours]]);
+  return rows.map((r) => ({ platform_id: r.id, url: info.link as string }));
+}
 async function addTmdbArtwork(out: { poster_url?: string; hero_url?: string }, d: any, warnings: string[]) {
   if (d.poster_path) out.poster_url = await copyImage(`${IMG}/original${d.poster_path}`, warnings, "poster", `${IMG}/w780${d.poster_path}`);
   if (d.backdrop_path) out.hero_url = await copyImage(`${IMG}/original${d.backdrop_path}`, warnings, "hero", `${IMG}/w1280${d.backdrop_path}`);
@@ -79,7 +110,7 @@ export async function tmdbArtwork(tmdbId: number): Promise<{ poster_url?: string
 // Loads one film's full details from TMDB and keeps our own copies of its images.
 export async function importFromTmdbId(tmdbId: number, imdbIdKnown?: string, opts: { images?: boolean } = {}): Promise<ImportResult> {
   const warnings: string[] = [];
-  const d = await tmdb(`/movie/${tmdbId}`, { append_to_response: "videos,credits" });
+  const d = await tmdb(`/movie/${tmdbId}`, { append_to_response: "videos,credits,watch/providers" });
 
   const director = d.credits?.crew?.find((c: any) => c.job === "Director")?.name;
   const trailer = d.videos?.results?.find((v: any) => v.site === "YouTube" && v.type === "Trailer");
@@ -95,6 +126,11 @@ export async function importFromTmdbId(tmdbId: number, imdbIdKnown?: string, opt
     links: [],
     warnings,
   };
+  try {
+    out.links = await watchLinks(d, warnings);
+  } catch {
+    /* watch data is a bonus; ignore failures */
+  }
   if (opts.images !== false) await addTmdbArtwork(out, d, warnings);
   return out;
 }

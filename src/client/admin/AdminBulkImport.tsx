@@ -68,14 +68,14 @@ export default function AdminBulkImport() {
           Import <span className="gold-text">finished</span>
         </h1>
         <p className="text-green-400">Added {result.added.length} film(s) as drafts: {result.added.join(", ") || "none"}.</p>
-        {result.updated.length > 0 && <p className="text-green-400">Filled in missing artwork for {result.updated.length} existing film(s): {result.updated.join(", ")}.</p>}
+        {result.updated.length > 0 && <p className="text-green-400">Filled in missing artwork or watch links for {result.updated.length} existing film(s): {result.updated.join(", ")}.</p>}
         {result.skipped.length > 0 && <p>Skipped (already on the site with artwork): {result.skipped.join(", ")}.</p>}
         {result.warnings.map((w) => (
           <p key={w} className="text-yellow-400 text-sm">
             {w}
           </p>
         ))}
-        <p className="text-sm text-[#999]">Drafts are hidden from the public site. Open each one with Edit, fix anything you need, then change its status to Released or Coming soon.</p>
+        <p className="text-sm text-[#999]">Watch links come from TMDB (JustWatch) and point to a JustWatch page for the film, not straight to the streaming service. Open each film to swap in the direct Tubi, Prime Video, Apple TV or Vudu link. Drafts are hidden from the public site. Open each one with Edit, fix anything you need, then change its status to Released or Coming soon.</p>
         <button className="btn" onClick={() => navigate("/admin")}>
           Go to films
         </button>
@@ -145,7 +145,7 @@ export default function AdminBulkImport() {
                 </button>
                 {movies.some((m) => m.already_added) && (
                   <button className="btn-outline" onClick={() => setPicked(new Set(movies.map((m) => m.tmdb_id)))}>
-                    Select all (also fills in missing artwork on films already added)
+                    Select all (also fills in missing artwork and watch links on films already added)
                   </button>
                 )}
               </div>

@@ -196,7 +196,8 @@ The Add Film form has an "Import from URL" box at the top. The admin pastes a li
 3. With the TMDB movie ID, call `GET /3/movie/{id}?append_to_response=videos,credits`.
 4. Map: title, release year, runtime, genres, overview → synopsis, director (from credits, job "Director"), poster, backdrop → hero image, and the first YouTube video of type "Trailer" → trailer URL.
 5. Download the poster and backdrop and store copies in the bucket. If the bucket is not set up or a copy fails, fall back to the original TMDB image address so the artwork still shows (owner's decision). The admin can always upload a replacement.
-6. If TMDB has no match, show: "This film was not found in the TMDB database. You can enter the details by hand."
+6. Also read `watch/providers` (append it to the movie call) for the `TMDB_WATCH_REGION` country (default US). Each provider that matches one of our platforms (Tubi, Prime Video, Apple TV, Vudu/Fandango) becomes a watch link. TMDB only supplies one JustWatch page URL per film, so that URL is used for each matched platform until the admin replaces it with a direct link. Never overwrite a link the admin already set.
+7. If TMDB has no match, show: "This film was not found in the TMDB database. You can enter the details by hand."
 
 Do NOT scrape imdb.com pages.
 
@@ -214,7 +215,7 @@ Only fetch `http`/`https` URLs. Refuse URLs that resolve to private, local, or i
 
 ### TMDB credit
 
-TMDB requires attribution. Put this in the footer in small text: "This product uses the TMDB API but is not endorsed or certified by TMDB." Before launch, the owner should confirm TMDB's current terms for commercial sites.
+TMDB requires attribution. Put this in the footer in small text: "This product uses the TMDB API but is not endorsed or certified by TMDB." Because we use TMDB's watch-provider data, also credit JustWatch in the footer, e.g. "Streaming availability data provided by JustWatch." Before launch, the owner should confirm TMDB's current terms for commercial sites.
 
 ## 9. Trailer embed
 
