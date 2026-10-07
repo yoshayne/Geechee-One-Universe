@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-ink text-[#d0d0d0] font-sans;
+}
+
+.gold-text {
+  background: linear-gradient(90deg, #f5d06f, #d4a537, #a87a1c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gold-btn {
+  @apply inline-block px-6 py-3 text-sm font-semibold uppercase tracking-widest text-ink;
+  background: linear-gradient(90deg, #f5d06f, #d4a537, #a87a1c);
+}
