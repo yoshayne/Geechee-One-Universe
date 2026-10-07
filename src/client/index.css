@@ -17,3 +17,22 @@ body {
   @apply inline-block px-6 py-3 text-sm font-semibold uppercase tracking-widest text-ink;
   background: linear-gradient(90deg, #f5d06f, #d4a537, #a87a1c);
 }
+
+@layer components {
+  .field {
+    @apply w-full bg-ink border border-white/20 px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:border-gold;
+  }
+  .label {
+    @apply block text-xs uppercase tracking-widest text-[#aaa] mb-1;
+  }
+  .btn {
+    @apply inline-block px-4 py-2 text-xs font-semibold uppercase tracking-widest text-ink disabled:opacity-60 cursor-pointer;
+    background: linear-gradient(90deg, #f5d06f, #d4a537, #a87a1c);
+  }
+  .btn-outline {
+    @apply inline-block px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gold border border-gold disabled:opacity-60 cursor-pointer;
+  }
+  .btn-danger {
+    @apply inline-block px-3 py-1 text-xs uppercase tracking-widest text-red-400 border border-red-400/60 cursor-pointer;
+  }
+}
