@@ -50,7 +50,7 @@ export default function FilmModal({ film, onClose }: { film: PublicFilm; onClose
     };
   }, [onClose]);
 
-  const meta = [film.year, film.runtime_minutes ? `${film.runtime_minutes} MIN` : null, film.genres.length ? film.genres.join(" / ") : null]
+  const meta = [film.year, film.runtime_minutes ? `${film.runtime_minutes} MIN` : null, film.genres.length ? film.genres.join(" / ") : null, film.content_rating]
     .filter(Boolean)
     .join("  |  ");
 
@@ -82,6 +82,22 @@ export default function FilmModal({ film, onClose }: { film: PublicFilm; onClose
             {meta && <p className="text-xs md:text-sm uppercase tracking-[0.12em] text-white whitespace-pre-wrap">{meta}</p>}
             {film.status === "coming_soon" && <p className="inline-block border border-gold/60 px-3 py-1 text-xs uppercase tracking-[0.2em] text-gold">Coming soon</p>}
             {film.synopsis && <p className="leading-relaxed text-[#d0d0d0]">{film.synopsis}</p>}
+            {(film.director || film.cast_names.length > 0) && (
+              <dl className="space-y-1 text-sm">
+                {film.director && (
+                  <div className="flex gap-2">
+                    <dt className="w-20 shrink-0 text-xs uppercase tracking-[0.15em] text-gold pt-0.5">Director</dt>
+                    <dd className="text-white">{film.director}</dd>
+                  </div>
+                )}
+                {film.cast_names.length > 0 && (
+                  <div className="flex gap-2">
+                    <dt className="w-20 shrink-0 text-xs uppercase tracking-[0.15em] text-gold pt-0.5">Cast</dt>
+                    <dd className="text-[#d0d0d0]">{film.cast_names.join(", ")}</dd>
+                  </div>
+                )}
+              </dl>
+            )}
             <Trailer film={film} />
             <div>
               <h3 className="font-serif font-bold uppercase tracking-wide text-gold text-lg mb-3">Where to watch</h3>

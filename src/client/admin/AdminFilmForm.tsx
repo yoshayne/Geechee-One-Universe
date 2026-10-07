@@ -10,6 +10,8 @@ type FormState = {
   runtime_minutes: string;
   genres: string;
   director: string;
+  cast: string;
+  content_rating: string;
   synopsis: string;
   status: Film["status"];
   is_featured: boolean;
@@ -22,7 +24,7 @@ type FormState = {
 };
 
 const empty: FormState = {
-  title: "", slug: "", year: "", runtime_minutes: "", genres: "", director: "", synopsis: "",
+  title: "", slug: "", year: "", runtime_minutes: "", genres: "", director: "", cast: "", content_rating: "", synopsis: "",
   status: "draft", is_featured: false, poster_url: "", hero_url: "", title_image_url: "",
   trailer_url: "", imdb_id: "", links: [],
 };
@@ -62,6 +64,8 @@ export default function AdminFilmForm() {
             runtime_minutes: film.runtime_minutes?.toString() ?? "",
             genres: film.genres.join(", "),
             director: film.director ?? "",
+            cast: (film.cast_names ?? []).join(", "),
+            content_rating: film.content_rating ?? "",
             synopsis: film.synopsis ?? "",
             status: film.status,
             is_featured: film.is_featured,
@@ -106,6 +110,8 @@ export default function AdminFilmForm() {
           runtime_minutes: r.runtime_minutes?.toString() ?? prev.runtime_minutes,
           genres: r.genres?.length ? r.genres.join(", ") : prev.genres,
           director: r.director ?? prev.director,
+          cast: r.cast_names?.length ? r.cast_names.join(", ") : prev.cast,
+          content_rating: r.content_rating ?? prev.content_rating,
           synopsis: r.synopsis ?? prev.synopsis,
           poster_url: r.poster_url ?? prev.poster_url,
           hero_url: r.hero_url ?? prev.hero_url,
@@ -134,6 +140,8 @@ export default function AdminFilmForm() {
       runtime_minutes: f.runtime_minutes === "" ? null : Number(f.runtime_minutes),
       genres: f.genres.split(",").map((g) => g.trim()).filter(Boolean),
       director: f.director,
+      cast_names: f.cast.split(",").map((n) => n.trim()).filter(Boolean),
+      content_rating: f.content_rating,
       synopsis: f.synopsis,
       poster_url: f.poster_url,
       hero_url: f.hero_url,
@@ -222,6 +230,15 @@ export default function AdminFilmForm() {
           <label className="label">Director</label>
           <input className="field" value={f.director} onChange={(e) => set("director", e.target.value)} />
         </div>
+        <div>
+          <label className="label">Rating</label>
+          <input className="field" placeholder="TV-MA" value={f.content_rating} onChange={(e) => set("content_rating", e.target.value)} />
+        </div>
+      </div>
+
+      <div>
+        <label className="label">Cast (separate with commas)</label>
+        <input className="field" placeholder="Benzino, Renaissance Jones, Shika Simmons" value={f.cast} onChange={(e) => set("cast", e.target.value)} />
       </div>
 
       <div>

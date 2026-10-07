@@ -120,8 +120,9 @@ tmdbRoutes.post("/import", async (c) => {
         const art = needsArt ? await tmdbArtwork(tmdbId) : { poster_url: undefined, hero_url: undefined, warnings: [] as string[] };
         await pool.query(
           `UPDATE films SET poster_url = COALESCE(poster_url, $1), hero_url = COALESCE(hero_url, $2),
-             trailer_url = COALESCE(trailer_url, $3), updated_at = now() WHERE id = $4`,
-          [art.poster_url ?? null, art.hero_url ?? null, f.trailer_url ?? null, row.id]
+             trailer_url = COALESCE(trailer_url, $3),
+             cast_names = CASE WHEN cardinality(cast_names) = 0 THEN $5::text[] ELSE cast_names END, updated_at = now() WHERE id = $4`,
+          [art.poster_url ?? null, art.hero_url ?? null, f.trailer_url ?? null, row.id, f.cast_names ?? []]
         );
         for (const l of newLinks) {
           await pool.query("INSERT INTO film_links (film_id, platform_id, url) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING", [row.id, l.platform_id, l.url]);
@@ -134,11 +135,11 @@ tmdbRoutes.post("/import", async (c) => {
       const slug = await freeSlug(slugify(f.title));
       const ins = await pool.query(
         `INSERT INTO films (slug, title, year, runtime_minutes, genres, director, synopsis, poster_url, hero_url,
-           trailer_url, imdb_id, status, is_featured, sort_order)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'draft',false,
+           trailer_url, imdb_id, cast_names, status, is_featured, sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'draft',false,
            (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM films)) RETURNING id`,
         [slug, f.title, f.year ?? null, f.runtime_minutes ?? null, f.genres ?? [], f.director ?? null,
-         f.synopsis ?? null, art.poster_url ?? null, art.hero_url ?? null, f.trailer_url ?? null, f.imdb_id ?? null]
+         f.synopsis ?? null, art.poster_url ?? null, art.hero_url ?? null, f.trailer_url ?? null, f.imdb_id ?? null, f.cast_names ?? []]
       );
       for (const l of f.links) {
         await pool.query("INSERT INTO film_links (film_id, platform_id, url) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING", [ins.rows[0].id, l.platform_id, l.url]);

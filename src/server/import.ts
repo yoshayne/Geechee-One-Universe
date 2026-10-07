@@ -10,6 +10,8 @@ export type ImportResult = {
   runtime_minutes?: number;
   genres?: string[];
   director?: string;
+  cast_names?: string[];
+  content_rating?: string;
   synopsis?: string;
   poster_url?: string;
   hero_url?: string;
@@ -120,6 +122,7 @@ export async function importFromTmdbId(tmdbId: number, imdbIdKnown?: string, opt
     runtime_minutes: d.runtime || undefined,
     genres: (d.genres || []).map((g: any) => g.name),
     director,
+    cast_names: (d.credits?.cast || []).slice(0, 8).map((c: any) => c.name).filter(Boolean),
     synopsis: d.overview || undefined,
     trailer_url: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
     imdb_id: imdbIdKnown || d.imdb_id || undefined,
@@ -168,6 +171,77 @@ function readMeta(html: string) {
   return meta;
 }
 
+// Many sites (Tubi included) describe the film in a standard machine-readable block
+// (schema.org "Movie" data). It has far more than the basic sharing tags.
+type StructuredMovie = {
+  title?: string;
+  synopsis?: string;
+  year?: number;
+  runtime_minutes?: number;
+  genres: string[];
+  director?: string;
+  cast_names: string[];
+  content_rating?: string;
+  image?: string;
+};
+
+function ldNames(v: any): string[] {
+  if (!v) return [];
+  if (typeof v === "string") return [v.trim()].filter(Boolean);
+  if (Array.isArray(v)) return v.flatMap(ldNames);
+  if (typeof v === "object" && typeof v.name === "string") return [v.name.trim()].filter(Boolean);
+  return [];
+}
+
+function ldImage(v: any): string | undefined {
+  if (!v) return undefined;
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return ldImage(v[0]);
+  if (typeof v === "object" && typeof v.url === "string") return v.url;
+  return undefined;
+}
+
+function ldHasType(n: any, type: string) {
+  const t = n && n["@type"];
+  return Array.isArray(t) ? t.includes(type) : t === type;
+}
+
+function readStructuredMovie(html: string): StructuredMovie | null {
+  for (const m of html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    let data: any;
+    try {
+      data = JSON.parse(m[1]);
+    } catch {
+      continue;
+    }
+    const nodes: any[] = [];
+    for (const top of Array.isArray(data) ? data : [data]) {
+      nodes.push(top);
+      if (top && Array.isArray(top["@graph"])) nodes.push(...top["@graph"]);
+    }
+    const n = nodes.find((x) => ldHasType(x, "Movie")) || nodes.find((x) => ldHasType(x, "VideoObject"));
+    if (!n) continue;
+
+    const when = n.releasedEvent?.startDate || n.dateCreated || n.datePublished;
+    const year = when ? Number(String(when).slice(0, 4)) : NaN;
+    const dur = typeof n.duration === "string" ? n.duration.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/) : null;
+    const minutes = dur ? Number(dur[1] || 0) * 60 + Number(dur[2] || 0) + Math.round(Number(dur[3] || 0) / 60) : 0;
+    const rating = ldNames(Array.isArray(n.contentRating) ? n.contentRating[0] : n.contentRating)[0];
+    return {
+      title: typeof n.name === "string" ? n.name.trim() : undefined,
+      synopsis: typeof n.description === "string" ? n.description.trim() : undefined,
+      year: year >= 1888 && year <= 2200 ? year : undefined,
+      runtime_minutes: minutes > 0 ? minutes : undefined,
+      genres: ldNames(n.genre),
+      director: ldNames(n.director).join(", ") || undefined,
+      cast_names: ldNames(n.actor).slice(0, 12),
+      content_rating: rating,
+      image: ldImage(n.image),
+    };
+  }
+  return null;
+}
+
 async function importFromPage(rawUrl: string): Promise<ImportResult> {
   const warnings: string[] = [];
   let page;
@@ -180,20 +254,50 @@ async function importFromPage(rawUrl: string): Promise<ImportResult> {
 
   const html = page.body.toString("utf8");
   const meta = readMeta(html);
-  let title = meta["og:title"] || meta["twitter:title"] || "";
+  const ld = readStructuredMovie(html);
+
+  let title = ld?.title || meta["og:title"] || meta["twitter:title"] || "";
   if (!title) {
     const t = html.match(/<title[^>]*>([^<]*)<\/title>/i);
     title = t ? decodeEntities(t[1]).trim() : "";
   }
   title = title.replace(/\s*[|\-–—]\s*(Tubi|Prime Video|Amazon\.com|Apple TV|Vudu|Fandango.*)$/i, "").trim();
-  const synopsis = meta["og:description"] || meta["description"] || meta["twitter:description"] || "";
-  const image = meta["og:image"] || meta["twitter:image"] || "";
-  if (!title && !synopsis && !image) throw new ImportError(CANT_READ);
+  // Page titles often end with the year, like "As We Lay (2026)".
+  const yearInTitle = title.match(/\s*\(((?:19|20)\d{2})\)\s*$/);
+  if (yearInTitle) title = title.slice(0, yearInTitle.index).trim();
 
-  const out: ImportResult = { title: title || undefined, synopsis: synopsis || undefined, links: [], warnings };
-  if (image) {
+  const synopsis = ld?.synopsis || meta["og:description"] || meta["description"] || meta["twitter:description"] || "";
+  if (!title && !synopsis && !ld && !(meta["og:image"] || meta["twitter:image"])) throw new ImportError(CANT_READ);
+
+  // A tall image is the poster, a wide one is the hero image.
+  const og = meta["og:image"] || meta["twitter:image"] || "";
+  const ogLandscape = Number(meta["og:image:width"]) > Number(meta["og:image:height"]);
+  let posterSrc = ld?.image;
+  let heroSrc: string | undefined;
+  if (og) {
+    if (ogLandscape) heroSrc = og;
+    else if (!posterSrc) posterSrc = og;
+  }
+
+  const out: ImportResult = {
+    title: title || undefined,
+    synopsis: synopsis || undefined,
+    year: ld?.year ?? (yearInTitle ? Number(yearInTitle[1]) : undefined),
+    runtime_minutes: ld?.runtime_minutes,
+    genres: ld?.genres.length ? ld.genres : undefined,
+    director: ld?.director,
+    cast_names: ld?.cast_names.length ? ld.cast_names : undefined,
+    content_rating: ld?.content_rating,
+    links: [],
+    warnings,
+  };
+  for (const [src, label, key] of [
+    [posterSrc, "poster", "poster_url"],
+    [heroSrc, "hero", "hero_url"],
+  ] as const) {
+    if (!src) continue;
     try {
-      out.poster_url = await copyImage(new URL(image, page.finalUrl).toString(), warnings, "poster");
+      out[key] = await copyImage(new URL(src, page.finalUrl).toString(), warnings, label);
     } catch {
       /* bad image address, ignore */
     }

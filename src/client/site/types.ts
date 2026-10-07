@@ -8,6 +8,8 @@ export type PublicFilm = {
   runtime_minutes: number | null;
   genres: string[];
   director: string | null;
+  cast_names: string[];
+  content_rating: string | null;
   synopsis: string | null;
   poster_url: string | null;
   hero_url: string | null;

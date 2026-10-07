@@ -30,6 +30,8 @@ const filmSchema = z.object({
   runtime_minutes: optInt(1, 1000),
   genres: z.array(z.string().trim().min(1)).default([]),
   director: optText,
+  cast_names: z.array(z.string().trim().min(1)).default([]),
+  content_rating: optText,
   synopsis: optText,
   poster_url: imageUrl,
   hero_url: imageUrl,
@@ -118,13 +120,14 @@ async function save(id: number | null, d: z.infer<typeof filmSchema>) {
     const values = [
       d.slug, d.title, d.year, d.runtime_minutes, d.genres, d.director, d.synopsis,
       d.poster_url, d.hero_url, d.title_image_url, d.trailer_url, d.imdb_id, d.status, d.is_featured,
+      d.cast_names, d.content_rating,
     ];
     let filmId: number;
     if (id === null) {
       const r = await client.query(
         `INSERT INTO films (slug, title, year, runtime_minutes, genres, director, synopsis, poster_url, hero_url,
-           title_image_url, trailer_url, imdb_id, status, is_featured, sort_order)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,
+           title_image_url, trailer_url, imdb_id, status, is_featured, cast_names, content_rating, sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,
            (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM films))
          RETURNING id`,
         values
@@ -134,8 +137,8 @@ async function save(id: number | null, d: z.infer<typeof filmSchema>) {
       const r = await client.query(
         `UPDATE films SET slug=$1, title=$2, year=$3, runtime_minutes=$4, genres=$5, director=$6, synopsis=$7,
            poster_url=$8, hero_url=$9, title_image_url=$10, trailer_url=$11, imdb_id=$12, status=$13,
-           is_featured=$14, updated_at=now()
-         WHERE id=$15 RETURNING id`,
+           is_featured=$14, cast_names=$15, content_rating=$16, updated_at=now()
+         WHERE id=$17 RETURNING id`,
         [...values, id]
       );
       if (!r.rows[0]) {

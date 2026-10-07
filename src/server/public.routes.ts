@@ -11,7 +11,7 @@ export const publicApi = new Hono();
 const cache = (c: { header: (n: string, v: string) => void }) => c.header("Cache-Control", "public, max-age=30");
 
 const FILM_FIELDS = `f.id, f.slug, f.title, f.year, f.runtime_minutes, f.genres, f.director, f.synopsis,
-  f.poster_url, f.hero_url, f.title_image_url, f.trailer_url, f.status, f.is_featured, f.sort_order`;
+  f.cast_names, f.content_rating, f.poster_url, f.hero_url, f.title_image_url, f.trailer_url, f.status, f.is_featured, f.sort_order`;
 
 const SELECT_FILMS = `
   SELECT ${FILM_FIELDS},
