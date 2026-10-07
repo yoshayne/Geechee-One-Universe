@@ -3,6 +3,7 @@ import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 
 const links = [
   { to: "/admin", label: "Films", end: true },
+  { to: "/admin/team", label: "Team" },
   { to: "/admin/platforms", label: "Platforms" },
   { to: "/admin/subscribers", label: "Subscribers" },
   { to: "/admin/settings", label: "Settings" },

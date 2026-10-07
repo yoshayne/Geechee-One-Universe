@@ -12,6 +12,7 @@ import { settings } from "./admin.settings";
 import { subscribers } from "./admin.subscribers";
 import { upload } from "./admin.upload";
 import { tmdbRoutes } from "./admin.tmdb";
+import { people } from "./admin.people";
 import { readObject, storageConfigured } from "./storage";
 
 const app = new Hono();
@@ -45,6 +46,7 @@ admin.route("/films", films);
 admin.route("/platforms", platforms);
 admin.route("/settings", settings);
 admin.route("/subscribers", subscribers);
+admin.route("/team", people);
 admin.route("/tmdb", tmdbRoutes);
 admin.route("/", upload);
 app.route("/api/admin", admin);

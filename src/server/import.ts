@@ -24,7 +24,7 @@ const CANT_READ = "Could not read that page. You can enter the details by hand."
 
 // Downloads an image and keeps our own copy in the bucket. If that is not possible,
 // falls back to the original web address so the artwork still shows.
-async function copyImage(url: string, warnings: string[], label: string, fallbackUrl: string = url): Promise<string | undefined> {
+export async function copyImage(url: string, warnings: string[], label: string, fallbackUrl: string = url): Promise<string | undefined> {
   const fallback = /^https?:\/\//.test(fallbackUrl) ? fallbackUrl : undefined;
   if (!storageConfigured) {
     const msg = "Image storage is not set up, so artwork links to the original image address instead. Set up the Railway bucket to keep your own copies.";

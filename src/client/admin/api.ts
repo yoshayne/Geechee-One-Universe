@@ -55,3 +55,14 @@ export const STATUS_LABELS: Record<Film["status"], string> = {
   released: "Released",
   coming_soon: "Coming soon",
 };
+
+export type Person = {
+  id: number;
+  name: string;
+  role: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  tmdb_person_id: number | null;
+  is_visible: boolean;
+  sort_order: number;
+};
