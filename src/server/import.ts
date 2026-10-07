@@ -22,21 +22,22 @@ export type ImportResult = {
 const NOT_IN_TMDB = "This film was not found in the TMDB database. You can enter the details by hand.";
 const CANT_READ = "Could not read that page. You can enter the details by hand.";
 
-// Downloads an image and keeps our own copy in the bucket. Never hot-links.
-async function copyImage(url: string, warnings: string[], label: string): Promise<string | undefined> {
+// Downloads an image and keeps our own copy in the bucket. If that is not possible,
+// falls back to the original web address so the artwork still shows.
+async function copyImage(url: string, warnings: string[], label: string, fallbackUrl: string = url): Promise<string | undefined> {
+  const fallback = /^https?:\/\//.test(fallbackUrl) ? fallbackUrl : undefined;
   if (!storageConfigured) {
-    if (!warnings.some((w) => w.includes("storage"))) {
-      warnings.push("Images were skipped because image storage is not set up yet (BUCKET_* variables).");
-    }
-    return undefined;
+    const msg = "Image storage is not set up, so artwork links to the original image address instead. Set up the Railway bucket to keep your own copies.";
+    if (!warnings.includes(msg)) warnings.push(msg);
+    return fallback;
   }
   try {
     const res = await safeGet(url, { maxBytes: MAX_IMAGE_BYTES, timeoutMs: 15000, accept: "image/*" });
     if (res.status !== 200) throw new Error("bad status");
     return await storeImage(res.body);
   } catch {
-    warnings.push(`The ${label} image could not be copied. You can upload it by hand.`);
-    return undefined;
+    warnings.push(`The ${label} image could not be copied, so it links to the original address instead.`);
+    return fallback;
   }
 }
 
@@ -60,8 +61,23 @@ async function importFromImdb(imdbId: string): Promise<ImportResult> {
   return importFromTmdbId(match.id, imdbId);
 }
 
+const IMG = "https://image.tmdb.org/t/p";
+async function addTmdbArtwork(out: { poster_url?: string; hero_url?: string }, d: any, warnings: string[]) {
+  if (d.poster_path) out.poster_url = await copyImage(`${IMG}/original${d.poster_path}`, warnings, "poster", `${IMG}/w780${d.poster_path}`);
+  if (d.backdrop_path) out.hero_url = await copyImage(`${IMG}/original${d.backdrop_path}`, warnings, "hero", `${IMG}/w1280${d.backdrop_path}`);
+}
+
+// Fetches only the artwork for a film (used to fill in films that were added without it).
+export async function tmdbArtwork(tmdbId: number): Promise<{ poster_url?: string; hero_url?: string; warnings: string[] }> {
+  const warnings: string[] = [];
+  const d = await tmdb(`/movie/${tmdbId}`);
+  const out: { poster_url?: string; hero_url?: string } = {};
+  await addTmdbArtwork(out, d, warnings);
+  return { ...out, warnings };
+}
+
 // Loads one film's full details from TMDB and keeps our own copies of its images.
-export async function importFromTmdbId(tmdbId: number, imdbIdKnown?: string): Promise<ImportResult> {
+export async function importFromTmdbId(tmdbId: number, imdbIdKnown?: string, opts: { images?: boolean } = {}): Promise<ImportResult> {
   const warnings: string[] = [];
   const d = await tmdb(`/movie/${tmdbId}`, { append_to_response: "videos,credits" });
 
@@ -79,8 +95,7 @@ export async function importFromTmdbId(tmdbId: number, imdbIdKnown?: string): Pr
     links: [],
     warnings,
   };
-  if (d.poster_path) out.poster_url = await copyImage(`https://image.tmdb.org/t/p/original${d.poster_path}`, warnings, "poster");
-  if (d.backdrop_path) out.hero_url = await copyImage(`https://image.tmdb.org/t/p/original${d.backdrop_path}`, warnings, "hero");
+  if (opts.images !== false) await addTmdbArtwork(out, d, warnings);
   return out;
 }
 

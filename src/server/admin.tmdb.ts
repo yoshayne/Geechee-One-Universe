@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { pool } from "./db";
-import { tmdb, importFromTmdbId, ImportError } from "./import";
+import { tmdb, importFromTmdbId, tmdbArtwork, ImportError } from "./import";
 import { firstError } from "./admin.util";
 
 // Bulk import of every film a production company has on TMDB. Everything lands as a draft.
@@ -85,19 +85,40 @@ tmdbRoutes.post("/import", async (c) => {
   if (!parsed.success) return c.json({ error: firstError(parsed.error) }, 400);
 
   const added: string[] = [];
+  const updated: string[] = [];
   const skipped: string[] = [];
   const warnings: string[] = [];
+  const note = (list: string[]) => {
+    for (const w of list) if (!warnings.includes(w)) warnings.push(w);
+  };
   for (const tmdbId of parsed.data.ids) {
     try {
-      const f = await importFromTmdbId(tmdbId);
+      // Details first, without images, so we know whether the film is already on the site.
+      const f = await importFromTmdbId(tmdbId, undefined, { images: false });
       if (!f.title) continue;
-      if (f.imdb_id) {
-        const dup = await pool.query("SELECT 1 FROM films WHERE imdb_id = $1", [f.imdb_id]);
-        if (dup.rowCount) {
+      const existing = await pool.query(
+        `SELECT id, poster_url, hero_url, trailer_url FROM films
+         WHERE (imdb_id IS NOT NULL AND imdb_id = $1) OR lower(title) = lower($2) LIMIT 1`,
+        [f.imdb_id ?? null, f.title]
+      );
+      const row = existing.rows[0];
+      if (row) {
+        // Already on the site: only fill in what is missing, never overwrite edits.
+        if (row.poster_url && row.hero_url) {
           skipped.push(f.title);
           continue;
         }
+        const art = await tmdbArtwork(tmdbId);
+        await pool.query(
+          `UPDATE films SET poster_url = COALESCE(poster_url, $1), hero_url = COALESCE(hero_url, $2),
+             trailer_url = COALESCE(trailer_url, $3), updated_at = now() WHERE id = $4`,
+          [art.poster_url ?? null, art.hero_url ?? null, f.trailer_url ?? null, row.id]
+        );
+        updated.push(f.title);
+        note(art.warnings);
+        continue;
       }
+      const art = await tmdbArtwork(tmdbId);
       const slug = await freeSlug(slugify(f.title));
       await pool.query(
         `INSERT INTO films (slug, title, year, runtime_minutes, genres, director, synopsis, poster_url, hero_url,
@@ -105,15 +126,15 @@ tmdbRoutes.post("/import", async (c) => {
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'draft',false,
            (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM films))`,
         [slug, f.title, f.year ?? null, f.runtime_minutes ?? null, f.genres ?? [], f.director ?? null,
-         f.synopsis ?? null, f.poster_url ?? null, f.hero_url ?? null, f.trailer_url ?? null, f.imdb_id ?? null]
+         f.synopsis ?? null, art.poster_url ?? null, art.hero_url ?? null, f.trailer_url ?? null, f.imdb_id ?? null]
       );
       added.push(f.title);
-      for (const w of f.warnings) if (!warnings.includes(w)) warnings.push(w);
+      note(art.warnings);
     } catch (e) {
       if (e instanceof ImportError) return c.json({ error: e.message }, 422);
       console.error("Bulk import failed for", tmdbId, e);
       warnings.push(`One film (TMDB ${tmdbId}) could not be loaded.`);
     }
   }
-  return c.json({ added, skipped, warnings });
+  return c.json({ added, updated, skipped, warnings });
 });

@@ -13,7 +13,7 @@ export default function AdminBulkImport() {
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ added: string[]; skipped: string[]; warnings: string[] } | null>(null);
+  const [result, setResult] = useState<{ added: string[]; updated: string[]; skipped: string[]; warnings: string[] } | null>(null);
 
   async function search() {
     setBusy("Searching…");
@@ -68,7 +68,8 @@ export default function AdminBulkImport() {
           Import <span className="gold-text">finished</span>
         </h1>
         <p className="text-green-400">Added {result.added.length} film(s) as drafts: {result.added.join(", ") || "none"}.</p>
-        {result.skipped.length > 0 && <p>Skipped (already on the site): {result.skipped.join(", ")}.</p>}
+        {result.updated.length > 0 && <p className="text-green-400">Filled in missing artwork for {result.updated.length} existing film(s): {result.updated.join(", ")}.</p>}
+        {result.skipped.length > 0 && <p>Skipped (already on the site with artwork): {result.skipped.join(", ")}.</p>}
         {result.warnings.map((w) => (
           <p key={w} className="text-yellow-400 text-sm">
             {w}
@@ -138,9 +139,16 @@ export default function AdminBulkImport() {
                   </label>
                 ))}
               </div>
-              <button className="btn" disabled={picked.size === 0 || Boolean(busy)} onClick={runImport}>
-                Import {picked.size} as drafts
-              </button>
+              <div className="flex flex-wrap gap-3">
+                <button className="btn" disabled={picked.size === 0 || Boolean(busy)} onClick={runImport}>
+                  Import {picked.size} selected
+                </button>
+                {movies.some((m) => m.already_added) && (
+                  <button className="btn-outline" onClick={() => setPicked(new Set(movies.map((m) => m.tmdb_id)))}>
+                    Select all (also fills in missing artwork on films already added)
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>

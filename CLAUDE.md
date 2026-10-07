@@ -195,7 +195,7 @@ The Add Film form has an "Import from URL" box at the top. The admin pastes a li
 2. Call TMDB: `GET /3/find/{imdb_id}?external_source=imdb_id`.
 3. With the TMDB movie ID, call `GET /3/movie/{id}?append_to_response=videos,credits`.
 4. Map: title, release year, runtime, genres, overview → synopsis, director (from credits, job "Director"), poster, backdrop → hero image, and the first YouTube video of type "Trailer" → trailer URL.
-5. Download the poster and backdrop and store copies in the bucket. Never hot-link TMDB images.
+5. Download the poster and backdrop and store copies in the bucket. If the bucket is not set up or a copy fails, fall back to the original TMDB image address so the artwork still shows (owner's decision). The admin can always upload a replacement.
 6. If TMDB has no match, show: "This film was not found in the TMDB database. You can enter the details by hand."
 
 Do NOT scrape imdb.com pages.
