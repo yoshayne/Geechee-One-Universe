@@ -89,6 +89,20 @@ films.put("/reorder", async (c) => {
   return c.json({ ok: true });
 });
 
+// Switch several films live (released) or back to draft. Must be registered before "/:id".
+// "Live" only changes drafts, so films marked coming soon keep that status.
+films.put("/bulk-status", async (c) => {
+  const parsed = z
+    .object({ ids: z.array(z.number().int()).min(1, "Pick at least one film."), live: z.boolean() })
+    .safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) return c.json({ error: firstError(parsed.error) }, 400);
+  const { ids, live } = parsed.data;
+  const r = live
+    ? await pool.query("UPDATE films SET status = 'released', updated_at = now() WHERE id = ANY($1) AND status = 'draft'", [ids])
+    : await pool.query("UPDATE films SET status = 'draft', updated_at = now() WHERE id = ANY($1) AND status <> 'draft'", [ids]);
+  return c.json({ changed: r.rowCount });
+});
+
 films.get("/:id", async (c) => {
   const id = Number(c.req.param("id"));
   if (!Number.isInteger(id)) return c.json({ error: "Not found" }, 404);
