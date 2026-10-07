@@ -5,6 +5,7 @@ import AdminLayout from "./admin/AdminLayout";
 import AdminFilms from "./admin/AdminFilms";
 import AdminFilmForm from "./admin/AdminFilmForm";
 import AdminBulkImport from "./admin/AdminBulkImport";
+import AdminUrlImport from "./admin/AdminUrlImport";
 import AdminTeam from "./admin/AdminTeam";
 import AdminPersonForm from "./admin/AdminPersonForm";
 import AdminTeamImport from "./admin/AdminTeamImport";
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminFilms />} />
         <Route path="films/import" element={<AdminBulkImport />} />
+        <Route path="films/import-url" element={<AdminUrlImport />} />
         <Route path="films/new" element={<AdminFilmForm />} />
         <Route path="films/:id" element={<AdminFilmForm />} />
         <Route path="team" element={<AdminTeam />} />

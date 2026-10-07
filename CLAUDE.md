@@ -209,6 +209,10 @@ Do NOT scrape imdb.com pages.
 4. If the URL's domain matches a known platform (tubitv.com → Tubi, amazon.com or primevideo.com → Prime Video, tv.apple.com → Apple TV, vudu.com or fandangoathome.com → Vudu/Fandango), also add it as a watch link for that platform.
 5. If the fetch is blocked or finds nothing, show: "Could not read that page. You can enter the details by hand."
 
+### Bulk import from a list page
+
+The Films page has "Import from a page". The admin pastes a page that lists many films (for example a Tubi person page such as https://tubitv.com/person/935674/felicia-rivers). The server reads the page's schema.org `ItemList` (movies only; series are left out and counted), shows the films with checkboxes, then imports the chosen ones one at a time through the same single-page import above. New films are saved as drafts; films already on the site (same title or same watch link) only get their empty fields filled in, so edits are never overwritten.
+
 ### Safety
 
 Only fetch `http`/`https` URLs. Refuse URLs that resolve to private, local, or internal network addresses.

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { pool } from "./db";
 import { tmdb, importFromTmdbId, tmdbArtwork, copyImage, ImportError } from "./import";
 import { firstError } from "./admin.util";
+import { freeSlug, slugify } from "./film.util";
 
 // Bulk import of every film a production company has on TMDB. Everything lands as a draft.
 export const tmdbRoutes = new Hono();
@@ -65,23 +66,6 @@ tmdbRoutes.get("/companies/:id/movies", async (c) => {
     return fail(c, e);
   }
 });
-
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "film";
-
-async function freeSlug(base: string) {
-  let slug = base;
-  for (let n = 2; ; n++) {
-    const { rowCount } = await pool.query("SELECT 1 FROM films WHERE slug = $1", [slug]);
-    if (!rowCount) return slug;
-    slug = `${base}-${n}`;
-  }
-}
 
 tmdbRoutes.post("/import", async (c) => {
   const parsed = z
