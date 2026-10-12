@@ -1,9 +1,30 @@
 import { useEffect, useState } from "react";
-import { api, Platform } from "./api";
+import { api, LogoMode, Platform } from "./api";
 import ImageUpload from "./ImageUpload";
+import { detectLogoMode } from "./detectLogoMode";
+import { PlatformMark } from "../site/shared";
 
-type Draft = { name: string; label: string; logo_url: string };
-const blank: Draft = { name: "", label: "", logo_url: "" };
+type Draft = { name: string; label: string; logo_url: string; logo_mode: LogoMode };
+const blank: Draft = { name: "", label: "", logo_url: "", logo_mode: "original" };
+
+const MODE_LABELS: Record<LogoMode, string> = {
+  original: "As uploaded",
+  white: "Turn solid white",
+  light: "On a light tile (for dark logos)",
+};
+
+// Shows the logo the way visitors will see it, on the site's black background.
+function LogoPreview({ draft }: { draft: Draft }) {
+  if (!draft.logo_url) return null;
+  return (
+    <div>
+      <span className="label">How it looks on the site</span>
+      <div className="inline-flex items-center bg-ink border border-white/20 px-4 py-3">
+        <PlatformMark name={draft.name || "Logo"} logoUrl={draft.logo_url} mode={draft.logo_mode} className="h-10" />
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPlatforms() {
   const [items, setItems] = useState<Platform[] | null>(null);
@@ -12,11 +33,16 @@ export default function AdminPlatforms() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  async function load() {
+  const toDraft = (p: Platform): Draft => ({ name: p.name, label: p.label ?? "", logo_url: p.logo_url ?? "", logo_mode: p.logo_mode ?? "original" });
+  const isDirty = (p: Platform, d: Draft) => d.name !== p.name || d.label !== (p.label ?? "") || d.logo_url !== (p.logo_url ?? "") || d.logo_mode !== p.logo_mode;
+
+  // Reloads the list from the server. Edits you have not saved yet on other rows are kept,
+  // except for the row named in savedId, which is refreshed to what was just saved.
+  async function load(savedId?: number) {
     try {
       const rows = await api<Platform[]>("/api/admin/platforms");
       setItems(rows);
-      setDrafts(Object.fromEntries(rows.map((p) => [p.id, { name: p.name, label: p.label ?? "", logo_url: p.logo_url ?? "" }])));
+      setDrafts((prev) => Object.fromEntries(rows.map((p) => [p.id, prev[p.id] && p.id !== savedId ? prev[p.id] : toDraft(p)])));
     } catch (e: any) {
       setError(e.message);
     }
@@ -25,16 +51,26 @@ export default function AdminPlatforms() {
     load();
   }, []);
 
-  async function run(fn: () => Promise<unknown>, okMsg = "") {
+  async function run(fn: () => Promise<unknown>, okMsg = "", savedId?: number) {
     setError("");
     setNotice("");
     try {
       await fn();
-      await load();
+      await load(savedId);
       setNotice(okMsg);
     } catch (e: any) {
       setError(e.message);
     }
+  }
+
+  async function autoMode(url: string, apply: (m: LogoMode) => void) {
+    const mode = await detectLogoMode(url);
+    apply(mode);
+    setNotice(
+      mode === "light"
+        ? "This logo has dark parts that would disappear on the black site, so it will be shown on a light tile. You can change it under Logo display."
+        : ""
+    );
   }
 
   const patch = (id: number, d: Partial<Draft>) => setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...d } }));
@@ -81,10 +117,31 @@ export default function AdminPlatforms() {
                   <label className="label">Label under the logo</label>
                   <input className="field" placeholder="Free Streaming" value={d.label} onChange={(e) => patch(p.id, { label: e.target.value })} />
                 </div>
+                <div>
+                  <label className="label">Logo display</label>
+                  <select className="field" value={d.logo_mode} onChange={(e) => patch(p.id, { logo_mode: e.target.value as LogoMode })}>
+                    {(Object.keys(MODE_LABELS) as LogoMode[]).map((m) => (
+                      <option key={m} value={m}>
+                        {MODE_LABELS[m]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <ImageUpload label="Logo" kind="platform" hint="Transparent PNG or SVG" value={d.logo_url} onChange={(v) => patch(p.id, { logo_url: v })} />
+              <div className="space-y-3">
+                <ImageUpload
+                  label="Logo"
+                  kind="platform"
+                  hint="Transparent PNG or SVG"
+                  value={d.logo_url}
+                  onChange={(v) => patch(p.id, { logo_url: v })}
+                  onUploaded={(url) => autoMode(url, (m) => patch(p.id, { logo_mode: m }))}
+                />
+                <LogoPreview draft={d} />
+              </div>
               <div className="flex flex-col gap-2">
-                <button className="btn" onClick={() => run(() => api(`/api/admin/platforms/${p.id}`, { method: "PUT", body: d }), `Saved ${d.name}.`)}>
+                {isDirty(p, d) && <span className="text-xs text-gold">Unsaved changes</span>}
+                <button className="btn" onClick={() => run(() => api(`/api/admin/platforms/${p.id}`, { method: "PUT", body: d }), `Saved ${d.name}.`, p.id)}>
                   Save
                 </button>
                 <button
@@ -117,7 +174,25 @@ export default function AdminPlatforms() {
             <input className="field" placeholder="Rent or Buy" value={adding.label} onChange={(e) => setAdding({ ...adding, label: e.target.value })} />
           </div>
         </div>
-        <ImageUpload label="Logo" kind="platform" hint="Transparent PNG or SVG" value={adding.logo_url} onChange={(v) => setAdding({ ...adding, logo_url: v })} />
+        <ImageUpload
+          label="Logo"
+          kind="platform"
+          hint="Transparent PNG or SVG"
+          value={adding.logo_url}
+          onChange={(v) => setAdding((a) => ({ ...a, logo_url: v }))}
+          onUploaded={(url) => autoMode(url, (m) => setAdding((a) => ({ ...a, logo_mode: m })))}
+        />
+        <div className="max-w-xs">
+          <label className="label">Logo display</label>
+          <select className="field" value={adding.logo_mode} onChange={(e) => setAdding({ ...adding, logo_mode: e.target.value as LogoMode })}>
+            {(Object.keys(MODE_LABELS) as LogoMode[]).map((m) => (
+              <option key={m} value={m}>
+                {MODE_LABELS[m]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <LogoPreview draft={adding} />
         <button
           className="btn"
           disabled={!adding.name.trim()}

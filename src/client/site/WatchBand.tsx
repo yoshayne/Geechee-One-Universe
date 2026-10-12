@@ -13,7 +13,7 @@ export default function WatchBand({ platforms }: { platforms: PublicPlatform[] }
         <ul className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-y-8">
           {platforms.map((p, i) => (
             <li key={p.id} className={`flex flex-col items-center gap-3 px-4 ${i > 0 ? "md:border-l md:border-gold/30" : ""}`}>
-              <PlatformMark name={p.name} logoUrl={p.logo_url} className="h-10 md:h-12" />
+              <PlatformMark name={p.name} logoUrl={p.logo_url} mode={p.logo_mode} className="h-10 md:h-12" />
               {p.label && <span className="text-sm text-white">{p.label}</span>}
             </li>
           ))}

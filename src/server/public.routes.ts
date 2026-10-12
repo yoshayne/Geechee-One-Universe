@@ -15,7 +15,7 @@ const FILM_FIELDS = `f.id, f.slug, f.title, f.year, f.runtime_minutes, f.genres,
 
 const SELECT_FILMS = `
   SELECT ${FILM_FIELDS},
-    COALESCE(json_agg(json_build_object('platform_id', p.id, 'platform_name', p.name, 'logo_url', p.logo_url,
+    COALESCE(json_agg(json_build_object('platform_id', p.id, 'platform_name', p.name, 'logo_url', p.logo_url, 'logo_mode', p.logo_mode,
       'label', p.label, 'url', l.url) ORDER BY p.sort_order) FILTER (WHERE l.id IS NOT NULL), '[]') AS links
   FROM films f
   LEFT JOIN film_links l ON l.film_id = f.id
@@ -36,7 +36,7 @@ publicApi.get("/films/:slug", async (c) => {
 });
 
 publicApi.get("/platforms", async (c) => {
-  const { rows } = await pool.query("SELECT id, name, logo_url, label FROM platforms ORDER BY sort_order, id");
+  const { rows } = await pool.query("SELECT id, name, logo_url, logo_mode, label FROM platforms ORDER BY sort_order, id");
   cache(c);
   return c.json(rows);
 });

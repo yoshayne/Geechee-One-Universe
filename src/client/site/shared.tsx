@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { FacebookIcon, InstagramIcon, TikTokIcon, YouTubeIcon } from "./icons";
-import { FilmLink, SiteSettings } from "./types";
+import { FilmLink, LogoMode, SiteSettings } from "./types";
 
 // Film titles: all words but the last in metallic white, the last word in gold.
 export function TitleText({ title, className = "" }: { title: string; className?: string }) {
@@ -38,9 +38,20 @@ export function Logo({ settings, className = "" }: { settings: SiteSettings; cla
 }
 
 // Platform logo, or the platform's name as text if no logo has been uploaded.
-export function PlatformMark({ name, logoUrl, className = "h-8" }: { name: string; logoUrl: string | null; className?: string }) {
-  if (logoUrl) return <img src={logoUrl} alt={name} loading="lazy" decoding="async" className={`${className} w-auto max-w-[9rem] object-contain`} />;
-  return <span className="font-serif font-bold text-lg text-white">{name}</span>;
+// Dark logos on a transparent background would vanish on the black site, so they can be shown
+// turned white ("white") or on a light tile ("light").
+export function PlatformMark({ name, logoUrl, mode = "original", className = "h-8" }: { name: string; logoUrl: string | null; mode?: LogoMode; className?: string }) {
+  if (!logoUrl) return <span className="font-serif font-bold text-lg text-white">{name}</span>;
+  const img = (
+    <img
+      src={logoUrl}
+      alt={name}
+      loading="lazy"
+      decoding="async"
+      className={`${className} w-auto max-w-[9rem] object-contain ${mode === "white" ? "brightness-0 invert" : ""}`}
+    />
+  );
+  return mode === "light" ? <span className="inline-flex items-center rounded bg-[#f2f2f2] px-3 py-1.5">{img}</span> : img;
 }
 
 export function PlatformLogoRow({ links }: { links: FilmLink[] }) {
@@ -49,7 +60,7 @@ export function PlatformLogoRow({ links }: { links: FilmLink[] }) {
     <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
       {links.map((l) => (
         <a key={l.platform_id} href={l.url} target="_blank" rel="noopener noreferrer" aria-label={`Watch on ${l.platform_name}`} className="opacity-90 hover:opacity-100">
-          <PlatformMark name={l.platform_name} logoUrl={l.logo_url} className="h-7 md:h-8" />
+          <PlatformMark name={l.platform_name} logoUrl={l.logo_url} mode={l.logo_mode} className="h-7 md:h-8" />
         </a>
       ))}
     </div>

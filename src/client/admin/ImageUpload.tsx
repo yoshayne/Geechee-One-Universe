@@ -7,9 +7,10 @@ type Props = {
   kind: "poster" | "hero" | "title" | "logo" | "about" | "platform";
   value: string;
   onChange: (url: string) => void;
+  onUploaded?: (url: string) => void;
 };
 
-export default function ImageUpload({ label, hint, kind, value, onChange }: Props) {
+export default function ImageUpload({ label, hint, kind, value, onChange, onUploaded }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,6 +24,7 @@ export default function ImageUpload({ label, hint, kind, value, onChange }: Prop
       form.append("kind", kind === "logo" || kind === "platform" ? "logo" : kind);
       const res = await api<{ url: string }>("/api/admin/upload", { form });
       onChange(res.url);
+      onUploaded?.(res.url);
     } catch (e: any) {
       setError(e.message);
     } finally {

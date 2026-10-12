@@ -1,4 +1,5 @@
-export type FilmLink = { platform_id: number; platform_name: string; logo_url: string | null; label: string | null; url: string };
+export type LogoMode = "original" | "white" | "light";
+export type FilmLink = { platform_id: number; platform_name: string; logo_url: string | null; logo_mode: LogoMode; label: string | null; url: string };
 
 export type PublicFilm = {
   id: number;
@@ -20,7 +21,7 @@ export type PublicFilm = {
   links: FilmLink[];
 };
 
-export type PublicPlatform = { id: number; name: string; logo_url: string | null; label: string | null };
+export type PublicPlatform = { id: number; name: string; logo_url: string | null; logo_mode: LogoMode; label: string | null };
 export type PublicPerson = { id: number; name: string; role: string | null; bio: string | null; photo_url: string | null };
 export type SiteSettings = Record<string, string>;
 

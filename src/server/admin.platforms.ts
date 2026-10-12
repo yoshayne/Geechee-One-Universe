@@ -10,6 +10,7 @@ const platformSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   label: nullText,
   logo_url: nullText,
+  logo_mode: z.enum(["original", "white", "light"]).default("original"),
 });
 
 platforms.get("/", async (c) => {
@@ -32,9 +33,9 @@ platforms.post("/", async (c) => {
   const d = parsed.data;
   try {
     const { rows } = await pool.query(
-      `INSERT INTO platforms (name, label, logo_url, sort_order)
-       VALUES ($1,$2,$3,(SELECT COALESCE(MAX(sort_order), 0) + 1 FROM platforms)) RETURNING *`,
-      [d.name, d.label, d.logo_url]
+      `INSERT INTO platforms (name, label, logo_url, logo_mode, sort_order)
+       VALUES ($1,$2,$3,$4,(SELECT COALESCE(MAX(sort_order), 0) + 1 FROM platforms)) RETURNING *`,
+      [d.name, d.label, d.logo_url, d.logo_mode]
     );
     return c.json(rows[0], 201);
   } catch (e) {
@@ -51,8 +52,8 @@ platforms.put("/:id", async (c) => {
   const d = parsed.data;
   try {
     const { rows } = await pool.query(
-      "UPDATE platforms SET name=$1, label=$2, logo_url=$3 WHERE id=$4 RETURNING *",
-      [d.name, d.label, d.logo_url, id]
+      "UPDATE platforms SET name=$1, label=$2, logo_url=$3, logo_mode=$4 WHERE id=$5 RETURNING *",
+      [d.name, d.label, d.logo_url, d.logo_mode, id]
     );
     if (!rows[0]) return c.json({ error: "Platform not found" }, 404);
     return c.json(rows[0]);

@@ -138,7 +138,7 @@ export default function FilmModal({ film, onClose }: { film: PublicFilm; onClose
                         className="flex h-full min-h-[96px] flex-col items-center justify-between gap-2 border border-white/25 hover:border-gold bg-panel px-2 py-3 text-center transition-colors"
                       >
                         <span className="flex flex-1 items-center">
-                          <PlatformMark name={l.platform_name} logoUrl={l.logo_url} className="h-8" />
+                          <PlatformMark name={l.platform_name} logoUrl={l.logo_url} mode={l.logo_mode} className="h-8" />
                         </span>
                         <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-gold">Watch Now</span>
                       </a>

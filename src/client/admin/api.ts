@@ -28,7 +28,8 @@ export async function api<T = any>(path: string, options: { method?: string; bod
   return data as T;
 }
 
-export type Platform = { id: number; name: string; logo_url: string | null; label: string | null; sort_order: number };
+export type LogoMode = "original" | "white" | "light";
+export type Platform = { id: number; name: string; logo_url: string | null; logo_mode: LogoMode; label: string | null; sort_order: number };
 export type FilmLink = { id?: number; platform_id: number; url: string; platform_name?: string };
 export type Film = {
   id: number;
