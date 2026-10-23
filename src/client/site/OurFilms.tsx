@@ -1,5 +1,6 @@
 import { TwoToneHeading } from "./shared";
 import { DEFAULT_TAGLINE, PublicFilm } from "./types";
+import SafeImg from "../lib/SafeImg";
 
 export default function OurFilms({ films, tagline, onOpen }: { films: PublicFilm[]; tagline: string; onOpen: (f: PublicFilm) => void }) {
   if (!films.length) return null;
@@ -15,7 +16,7 @@ export default function OurFilms({ films, tagline, onOpen }: { films: PublicFilm
           <li key={f.id} className="flex flex-col gap-3">
             <button onClick={() => onOpen(f)} aria-label={`View ${f.title}`} className="block aspect-[2/3] w-full overflow-hidden border border-gold/30 hover:border-gold transition-colors bg-panel">
               {f.poster_url ? (
-                <img src={f.poster_url} alt={`${f.title} poster`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                <SafeImg src={f.poster_url} alt={`${f.title} poster`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
                 <span className="flex h-full items-center justify-center p-3 text-center font-serif font-bold uppercase text-white">{f.title}</span>
               )}

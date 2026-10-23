@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, Person } from "./api";
+import SafeImg from "../lib/SafeImg";
 
 export default function AdminTeam() {
   const [items, setItems] = useState<Person[] | null>(null);
@@ -82,7 +83,7 @@ export default function AdminTeam() {
                     ↓
                   </button>
                 </td>
-                <td>{p.photo_url ? <img src={p.photo_url} alt="" className="h-14 w-14 object-cover rounded-full" /> : <div className="h-14 w-14 rounded-full bg-panel" />}</td>
+                <td>{p.photo_url ? <SafeImg src={p.photo_url} alt="" className="h-14 w-14 object-cover rounded-full" /> : <div className="h-14 w-14 rounded-full bg-panel" />}</td>
                 <td className="text-white">{p.name}</td>
                 <td>{p.role}</td>
                 <td className={p.is_visible ? "text-green-400" : "text-[#777]"}>{p.is_visible ? "Shown" : "Hidden"}</td>

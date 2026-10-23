@@ -1,6 +1,7 @@
 import { PlayIcon } from "./icons";
 import { PlatformLogoRow, TitleText } from "./shared";
 import { PublicFilm } from "./types";
+import SafeImg from "../lib/SafeImg";
 
 export default function Hero({ film, onWatch }: { film: PublicFilm; onWatch: (f: PublicFilm) => void }) {
   return (
@@ -8,7 +9,7 @@ export default function Hero({ film, onWatch }: { film: PublicFilm; onWatch: (f:
       {/* Phone: the whole picture sits across the top of the screen. Desktop: it fills the section behind the text. */}
       {film.hero_url ? (
         <div className="relative md:absolute md:inset-0">
-          <img
+          <SafeImg
             src={film.hero_url}
             alt=""
             fetchPriority="high"
@@ -27,7 +28,7 @@ export default function Hero({ film, onWatch }: { film: PublicFilm; onWatch: (f:
         <div className="md:max-w-[62%] space-y-5">
           <p className="text-[11px] md:text-xs uppercase tracking-[0.3em] text-white/90">A Geechee One Films Production</p>
           {film.title_image_url ? (
-            <img src={film.title_image_url} alt={film.title} className="max-h-40 md:max-h-52 w-auto object-contain" />
+            <SafeImg src={film.title_image_url} alt={film.title} className="max-h-40 md:max-h-52 w-auto object-contain" />
           ) : (
             <h1>
               <TitleText title={film.title} className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl" />

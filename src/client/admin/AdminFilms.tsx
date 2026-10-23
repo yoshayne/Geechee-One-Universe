@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, Film } from "./api";
+import SafeImg from "../lib/SafeImg";
 
 export default function AdminFilms() {
   const [films, setFilms] = useState<Film[] | null>(null);
@@ -144,7 +145,7 @@ export default function AdminFilms() {
                         <input type="checkbox" aria-label={`Select ${f.title}`} checked={selected.has(f.id)} onChange={() => toggleOne(f.id)} />
                       </td>
                       <td className="py-2">
-                        {f.poster_url ? <img src={f.poster_url} alt="" className="h-16 w-11 object-cover" /> : <div className="h-16 w-11 bg-panel" />}
+                        {f.poster_url ? <SafeImg src={f.poster_url} alt="" className="h-16 w-11 object-cover" /> : <div className="h-16 w-11 bg-panel" />}
                       </td>
                       <td className="text-white">{f.title}</td>
                       <td>

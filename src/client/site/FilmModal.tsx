@@ -3,6 +3,7 @@ import { CloseIcon, PlayIcon } from "./icons";
 import { PlatformMark, TitleText } from "./shared";
 import { PublicFilm } from "./types";
 import { youtubeId } from "./youtube";
+import SafeImg from "../lib/SafeImg";
 
 // Shows a thumbnail first and only loads the YouTube player after the visitor clicks play.
 function Trailer({ film }: { film: PublicFilm }) {
@@ -22,7 +23,7 @@ function Trailer({ film }: { film: PublicFilm }) {
         />
       ) : (
         <button onClick={() => setPlaying(true)} aria-label={`Play ${film.title} trailer`} className="group absolute inset-0 w-full h-full">
-          <img src={thumb} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" />
+          <SafeImg src={thumb} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" />
           <span className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white text-white bg-black/30">
             <PlayIcon className="h-7 w-7 ml-1" />
           </span>
@@ -95,7 +96,7 @@ export default function FilmModal({ film, onClose }: { film: PublicFilm; onClose
           <div className="mx-auto w-3/5 md:w-full">
             <div className="aspect-[2/3] w-full overflow-hidden border border-white/10 bg-panel">
               {film.poster_url ? (
-                <img src={film.poster_url} alt={`${film.title} poster`} className="h-full w-full object-cover" />
+                <SafeImg src={film.poster_url} alt={`${film.title} poster`} className="h-full w-full object-cover" />
               ) : (
                 <span className="flex h-full items-center justify-center p-4 text-center font-serif font-bold uppercase text-white">{film.title}</span>
               )}

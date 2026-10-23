@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PublicPerson, SiteSettings } from "./types";
 import { TwoToneHeading } from "./shared";
+import SafeImg from "../lib/SafeImg";
 
 const DEFAULT_ABOUT =
   "Geechee One Films, the brainchild of Felicia Rivers, is an independent film production company focused on authentic, powerful storytelling. From compelling dramas to thrilling urban narratives, our films reflect real life, real people, and the unique GeeChee culture.";
@@ -12,7 +13,7 @@ function TeamCard({ person }: { person: PublicPerson }) {
     <li className="flex flex-col border border-gold/25 bg-panel">
       <div className="aspect-square w-full bg-ink overflow-hidden">
         {person.photo_url ? (
-          <img src={person.photo_url} alt={person.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <SafeImg src={person.photo_url} alt={person.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           <span className="flex h-full items-center justify-center font-serif text-5xl text-gold/60">{person.name.charAt(0)}</span>
         )}
@@ -43,7 +44,7 @@ export default function About({ settings, people }: { settings: SiteSettings; pe
       <div className={`grid ${image ? "md:grid-cols-2" : ""}`}>
         {image && (
           <div className="relative min-h-[320px] md:min-h-[460px]">
-            <img src={image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+            <SafeImg src={image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-ink hidden md:block" />
           </div>
         )}

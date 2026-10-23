@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { FacebookIcon, InstagramIcon, TikTokIcon, YouTubeIcon } from "./icons";
 import { FilmLink, LogoMode, SiteSettings } from "./types";
+import SafeImg from "../lib/SafeImg";
 
 // Film titles: all words but the last in metallic white, the last word in gold.
 export function TitleText({ title, className = "" }: { title: string; className?: string }) {
@@ -27,7 +28,7 @@ export function TwoToneHeading({ text, className = "" }: { text: string; classNa
 
 export function Logo({ settings, className = "" }: { settings: SiteSettings; className?: string }) {
   if (settings.logo_url) {
-    return <img src={settings.logo_url} alt="Geechee One Universe" className={`h-12 md:h-14 w-auto object-contain ${className}`} />;
+    return <SafeImg src={settings.logo_url} alt="Geechee One Universe" className={`h-12 md:h-14 w-auto object-contain ${className}`} />;
   }
   return (
     <span className={`inline-flex flex-col leading-none whitespace-nowrap ${className}`}>
@@ -43,7 +44,7 @@ export function Logo({ settings, className = "" }: { settings: SiteSettings; cla
 export function PlatformMark({ name, logoUrl, mode = "original", className = "h-8" }: { name: string; logoUrl: string | null; mode?: LogoMode; className?: string }) {
   if (!logoUrl) return <span className="font-serif font-bold text-lg text-white">{name}</span>;
   const img = (
-    <img
+    <SafeImg
       src={logoUrl}
       alt={name}
       loading="lazy"

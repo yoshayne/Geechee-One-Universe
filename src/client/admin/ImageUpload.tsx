@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "./api";
+import SafeImg from "../lib/SafeImg";
 
 type Props = {
   label: string;
@@ -40,7 +41,7 @@ export default function ImageUpload({ label, hint, kind, value, onChange, onUplo
       <p className="text-xs text-[#777] mb-2">{hint}</p>
       <div className="flex items-start gap-3">
         {value ? (
-          <img src={value} alt="" className="h-24 w-auto max-w-[8rem] object-contain bg-black border border-white/20" />
+          <SafeImg src={value} alt="" className="h-24 w-auto max-w-[8rem] object-contain bg-black border border-white/20" />
         ) : (
           <div className="h-24 w-16 border border-dashed border-white/20 text-[10px] text-[#666] flex items-center justify-center">None</div>
         )}
