@@ -140,7 +140,11 @@ export async function storeImage(buf: Buffer, opts: { allowSvg?: boolean } = {})
 
 export async function readObject(key: string, useClient: S3Client = s3()) {
   const out = await useClient.send(new GetObjectCommand({ Bucket: process.env.BUCKET_NAME, Key: key }));
-  return { stream: out.Body!.transformToWebStream(), contentType: out.ContentType || "application/octet-stream" };
+  return {
+    stream: out.Body!.transformToWebStream(),
+    contentType: out.ContentType || "application/octet-stream",
+    contentLength: typeof out.ContentLength === "number" ? out.ContentLength : undefined,
+  };
 }
 
 // ---- Storage health check ----

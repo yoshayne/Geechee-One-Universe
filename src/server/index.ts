@@ -79,12 +79,17 @@ function warnMediaProblem(err: unknown) {
 
 app.get("/media/*", async (c) => {
   const key = c.req.path.replace(/^\/media\//, "");
-  if (!storageConfigured || !/^uploads\/[a-f0-9-]+\.(jpg|png|webp|svg)$/.test(key)) return c.notFound();
+  if (!storageConfigured || !/^uploads\/[a-f0-9-]+\.(jpg|png|webp|svg)$/.test(key)) {
+    c.header("Cache-Control", "no-store");
+    return c.notFound();
+  }
   try {
-    const { stream, contentType } = await readObject(key);
+    const { stream, contentType, contentLength } = await readObject(key);
     return new Response(stream, {
       headers: {
         "Content-Type": contentType,
+        // Lets browsers and CDNs notice a cut-off download instead of saving half an image for a year.
+        ...(contentLength !== undefined ? { "Content-Length": String(contentLength) } : {}),
         "Cache-Control": "public, max-age=31536000, immutable",
         "X-Content-Type-Options": "nosniff",
         // Stops any script hidden inside an SVG from running.
@@ -93,10 +98,11 @@ app.get("/media/*", async (c) => {
     });
   } catch (err) {
     // A file that is not in the bucket is a normal 404. Anything else means storage itself is broken
-    // (for example rotated keys), which must not look like a missing image and must not be cached.
+    // (for example rotated keys), so it is a 502 rather than a fake "missing image". Neither may ever be
+    // saved by a CDN or browser: a saved error would keep an image broken long after the cause is fixed.
+    c.header("Cache-Control", "no-store");
     if (isMissingFile(err)) return c.notFound();
     warnMediaProblem(err);
-    c.header("Cache-Control", "no-store");
     return c.text("Image storage is unavailable.", 502);
   }
 });
