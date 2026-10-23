@@ -14,7 +14,7 @@ import { tmdbRoutes } from "./admin.tmdb";
 import { people } from "./admin.people";
 import { bulk } from "./admin.bulk";
 import { publicApi } from "./public.routes";
-import { readObject, storageConfigured } from "./storage";
+import { checkStorage, explainStorageError, isMissingFile, readObject, storageConfigured } from "./storage";
 import { metaFor, originFor, readTemplate, renderPage, robotsTxt, sitemapXml } from "./seo";
 
 const app = new Hono();
@@ -48,6 +48,11 @@ app.route("/api", publicApi);
 const admin = new Hono();
 admin.use("*", requireAdmin);
 admin.get("/ping", (c) => c.json({ ok: true }));
+// Writes, reads back and deletes a tiny test file, and says in plain words what is wrong if it fails.
+admin.get("/storage-check", async (c) => {
+  c.header("Cache-Control", "no-store");
+  return c.json(await checkStorage());
+});
 admin.route("/films", films);
 admin.route("/platforms", platforms);
 admin.route("/settings", settings);
@@ -61,6 +66,15 @@ app.route("/api/admin", admin);
 app.all("/api/*", (c) => c.json({ error: "Not found" }, 404));
 
 // ---- Uploaded images, served from the bucket ----
+// Logs the reason at most once a minute, so a broken bucket is visible in the Railway logs
+// without flooding them. Only the error name and status are logged, never keys.
+let lastMediaWarning = 0;
+function warnMediaProblem(err: unknown) {
+  if (Date.now() - lastMediaWarning < 60_000) return;
+  lastMediaWarning = Date.now();
+  console.warn(`Image storage problem while serving /media: ${explainStorageError(err)}`);
+}
+
 app.get("/media/*", async (c) => {
   const key = c.req.path.replace(/^\/media\//, "");
   if (!storageConfigured || !/^uploads\/[a-f0-9-]+\.(jpg|png|webp|svg)$/.test(key)) return c.notFound();
@@ -75,8 +89,13 @@ app.get("/media/*", async (c) => {
         "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
       },
     });
-  } catch {
-    return c.notFound();
+  } catch (err) {
+    // A file that is not in the bucket is a normal 404. Anything else means storage itself is broken
+    // (for example rotated keys), which must not look like a missing image and must not be cached.
+    if (isMissingFile(err)) return c.notFound();
+    warnMediaProblem(err);
+    c.header("Cache-Control", "no-store");
+    return c.text("Image storage is unavailable.", 502);
   }
 });
 
@@ -126,6 +145,12 @@ async function start() {
     console.warn("DATABASE_URL not set; database features are off.");
   }
   if (!storageConfigured) console.warn("Bucket variables not set; image uploads are off.");
+  else {
+    // Test the keys at every start, so rotated keys show up in the logs right after a deploy.
+    checkStorage()
+      .then((r) => (r.ok ? console.log(`Image storage check passed (keys code ${r.settings.keysFingerprint}).`) : console.warn(`Image storage check FAILED: ${r.summary}`)))
+      .catch((err) => console.warn(`Image storage check could not run: ${explainStorageError(err)}`));
+  }
   const port = Number(process.env.PORT) || 3000;
   serve({ fetch: app.fetch, port }, () => console.log(`Server listening on ${port}`));
 }

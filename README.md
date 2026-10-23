@@ -19,11 +19,25 @@ Railway builds from the `main` branch on GitHub and redeploys on every push.
 | `REDIS_URL` | Redis address. Optional: without it, rate limiting is off |
 | `BUCKET_NAME`, `BUCKET_ACCESS_KEY_ID`, `BUCKET_SECRET_ACCESS_KEY`, `BUCKET_REGION` | Image storage bucket |
 | `BUCKET_ENDPOINT` (or `BUCKET_URL`) | The bucket's address |
+| `BUCKET_FORCE_PATH_STYLE` | Optional. Default `true`. Set to `false` only if the storage check says your bucket needs the other address style |
 | `JWT_SECRET` | A long random text that signs admin logins |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | The one admin account, created on first start |
 | `TMDB_API_KEY` | Film data import from TMDB |
 | `TMDB_WATCH_REGION` | Optional. Two-letter country for "where to watch" data. Default `US` |
 | `PUBLIC_SITE_URL` | The site's real address, like `https://www.geecheeoneuniverse.com`. Used in link previews, the sitemap and robots.txt |
+
+## Image storage and rotating the bucket keys
+
+Uploaded images are saved in the bucket and shown through the site's own `/media/...` addresses. The database never stores bucket keys or signed links, so a key rotation never damages stored data. It only means the site needs the **current** keys in its Railway variables.
+
+**Best way to avoid trouble:** in Railway, make the four bucket variables on the app service *references* to the bucket service (the variable editor offers "Add Reference") instead of pasted values. Then a rotation is picked up automatically on the next deploy.
+
+**After a rotation, or any time images look broken:**
+1. Make sure `BUCKET_ACCESS_KEY_ID` and `BUCKET_SECRET_ACCESS_KEY` hold the current keys, and `BUCKET_NAME` and `BUCKET_ENDPOINT` (or `BUCKET_URL`) are correct. Redeploy.
+2. Log in at `/admin`, open **Settings**, and click **Test image storage**. It writes a tiny file, reads it back and deletes it, and says in plain words what is wrong.
+3. You can also run `npm run storage:check` in the Railway console, or look for the line "Image storage check passed" in the deploy logs.
+
+The "Keys code" shown by the test changes whenever the access key, bucket or endpoint changes. If it did not change after you updated the keys, the new keys are not in use yet.
 
 ## Using your own domain
 

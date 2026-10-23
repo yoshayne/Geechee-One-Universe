@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "./api";
 import ImageUpload from "./ImageUpload";
+import StorageCheck from "./StorageCheck";
 
 type Settings = Record<string, string>;
 
@@ -104,6 +105,8 @@ export default function AdminSettings() {
         {pwMsg && <p className={`text-sm ${pwMsg.ok ? "text-green-400" : "text-red-400"}`}>{pwMsg.text}</p>}
         <button className="btn">Change password</button>
       </form>
+
+      <StorageCheck />
     </div>
   );
 }
