@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { createHash, randomUUID } from "crypto";
 
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -20,6 +20,17 @@ export function missingStorageVariables(): string[] {
   if (!process.env.BUCKET_SECRET_ACCESS_KEY) missing.push("BUCKET_SECRET_ACCESS_KEY");
   return missing;
 }
+
+// The bucket's host name (like storage.example.com), used to recognise full bucket links in the database.
+export function bucketHost(): string | undefined {
+  try {
+    return new URL(bucketEndpoint() || "").hostname.toLowerCase() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export const bucketNameFromEnv = () => process.env.BUCKET_NAME || undefined;
 
 export const storageConfigured = missingStorageVariables().length === 0;
 
@@ -227,4 +238,16 @@ export async function checkStorage(): Promise<StorageCheckResult> {
 
   const bad = first.steps.find((x) => !x.ok)!;
   return { ok: false, summary: `Image storage is not working. ${bad.step} failed: ${bad.message}`, steps: first.steps, settings };
+}
+
+// Does this file exist in the bucket? "unknown" means we could not tell (for example the keys are wrong),
+// so it is never reported as missing by mistake.
+export async function objectExists(key: string): Promise<"yes" | "no" | "unknown"> {
+  try {
+    await s3().send(new HeadObjectCommand({ Bucket: process.env.BUCKET_NAME, Key: key }));
+    return "yes";
+  } catch (err) {
+    const e = err as any;
+    return e?.name === "NotFound" || e?.name === "NoSuchKey" ? "no" : "unknown";
+  }
 }

@@ -37,6 +37,8 @@ Uploaded images are saved in the bucket and shown through the site's own `/media
 2. Log in at `/admin`, open **Settings**, and click **Test image storage**. It writes a tiny file, reads it back and deletes it, and says in plain words what is wrong.
 3. You can also run `npm run storage:check` in the Railway console, or look for the line "Image storage check passed" in the deploy logs.
 
+**Repairing saved image links:** if someone pasted a full bucket or signed link into an image field, it stops working when keys change. In `/admin` open **Image tools**: Step 1 previews what would be rewritten to the permanent `/media/…` form (nothing changes), Step 2 asks you to confirm, saves a backup of every changed row, then repairs. **Undo last repair** restores from the backup.
+
 The "Keys code" shown by the test changes whenever the access key, bucket or endpoint changes. If it did not change after you updated the keys, the new keys are not in use yet.
 
 ## Using your own domain

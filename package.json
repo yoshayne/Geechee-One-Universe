@@ -10,6 +10,7 @@
     "build": "npm run build:client && npm run build:server",
     "start": "NODE_ENV=production node dist/server/index.js",
     "storage:check": "node dist/server/storage-check-cli.js",
+    "test": "npm run build:server && node --test dist/server/imageKeys.test.js",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.json --noEmit"
   },
   "engines": {

@@ -6,6 +6,7 @@ const links = [
   { to: "/admin/team", label: "Team" },
   { to: "/admin/platforms", label: "Platforms" },
   { to: "/admin/subscribers", label: "Subscribers" },
+  { to: "/admin/image-tools", label: "Image tools" },
   { to: "/admin/settings", label: "Settings" },
 ];
 

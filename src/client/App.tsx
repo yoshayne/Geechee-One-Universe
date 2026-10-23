@@ -6,6 +6,7 @@ import AdminFilms from "./admin/AdminFilms";
 import AdminFilmForm from "./admin/AdminFilmForm";
 import AdminBulkImport from "./admin/AdminBulkImport";
 import AdminUrlImport from "./admin/AdminUrlImport";
+import AdminImageTools from "./admin/AdminImageTools";
 import AdminTeam from "./admin/AdminTeam";
 import AdminPersonForm from "./admin/AdminPersonForm";
 import AdminTeamImport from "./admin/AdminTeamImport";
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="team/:id" element={<AdminPersonForm />} />
         <Route path="platforms" element={<AdminPlatforms />} />
         <Route path="subscribers" element={<AdminSubscribers />} />
+        <Route path="image-tools" element={<AdminImageTools />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
     </Routes>
